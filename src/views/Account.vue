@@ -50,7 +50,7 @@
   </ion-page>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { store } from "../store";
 import { supabase } from "../supabase";
 import {
@@ -65,111 +65,92 @@ import {
   IonItem,
   IonButton,
   IonLabel,
-  onIonViewDidEnter,
   onIonViewWillEnter,
-useIonRouter,
+  useIonRouter,
 } from "@ionic/vue";
 import { User } from "@supabase/supabase-js";
-import { defineComponent, nextTick, onMounted, ref } from "vue";
+import { ref } from "vue";
 import Avatar from "../components/Avatar.vue";
-import { useRouter } from "vue-router";
-export default defineComponent({
-  name: "AccountPage",
-  components: {
-    Avatar,
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonInput,
-    IonItem,
-    IonButton,
-    IonLabel,
-  },
-  setup() {
-    const session = ref();
-    const router = useIonRouter();
-    const profile = ref({
-      username: "",
-      website: "",
-      avatar_url: "",
-    });
-    const user = store.user as User;
-    async function getProfile() {
-      const loader = await loadingController.create({});
-      const toast = await toastController.create({ duration: 5000 });
-      await loader.present();
-      try {
-        let { data, error, status } = await supabase
-          .from("profiles")
-          .select(`username, website, avatar_url`)
-          .eq("id", user.id)
-          .single();
 
-        if (error && status !== 406) throw error;
+const session = ref();
+const router = useIonRouter();
+const profile = ref({
+  username: "",
+  website: "",
+  avatar_url: "",
+});
+const user = store.user as User;
+async function getProfile() {
+  const loader = await loadingController.create({});
+  const toast = await toastController.create({ duration: 5000 });
+  await loader.present();
+  try {
+    let { data, error, status } = await supabase
+      .from("profiles")
+      .select(`username, website, avatar_url`)
+      .eq("id", user.id)
+      .single();
 
-        if (data) {
-          console.log(data);
-          profile.value = {
-            username: data.username,
-            website: data.website,
-            avatar_url: data.avatar_url,
-          };
-        }
-      } catch (error: any) {
-        toast.message = error.message;
-        await toast.present();
-      } finally {
-        await loader.dismiss();
-      }
+    if (error && status !== 406) throw error;
+
+    if (data) {
+      console.log(data);
+      profile.value = {
+        username: data.username,
+        website: data.website,
+        avatar_url: data.avatar_url,
+      };
     }
+  } catch (error: any) {
+    toast.message = error.message;
+    await toast.present();
+  } finally {
+    await loader.dismiss();
+  }
+}
 
-    const updateProfile = async () => {
-      const loader = await loadingController.create({});
-      const toast = await toastController.create({ duration: 5000 });
-      try {
-        await loader.present();
-        const updates = {
-          id: user.id,
-          ...profile.value,
-          updated_at: new Date(),
-        };
-        //
-        let { error } = await supabase.from("profiles").upsert(updates);
-        //
-        if (error) throw error;
-      } catch (error: any) {
-        toast.message = error.message;
-        await toast.present();
-      } finally {
-        await loader.dismiss();
-      }
+const updateProfile = async () => {
+  const loader = await loadingController.create({});
+  const toast = await toastController.create({ duration: 5000 });
+  try {
+    await loader.present();
+    const updates = {
+      id: user.id,
+      ...profile.value,
+      updated_at: new Date(),
     };
+    //
+    let { error } = await supabase.from("profiles").upsert(updates);
+    //
+    if (error) throw error;
+  } catch (error: any) {
+    toast.message = error.message;
+    await toast.present();
+  } finally {
+    await loader.dismiss();
+  }
+};
 
-    async function signOut() {
-      const loader = await loadingController.create({});
-      const toast = await toastController.create({ duration: 5000 });
-      await loader.present();
-      try {
-        let { error } = await supabase.auth.signOut();
-        if (error) throw error;
-      } catch (error: any) {
-        toast.message = error.message;
-        await toast.present();
-      } finally {
-        await loader.dismiss();
-        router.push({name:"Login", replace : true});
-      }
-    }
+async function signOut() {
+  const loader = await loadingController.create({});
+  const toast = await toastController.create({ duration: 5000 });
+  await loader.present();
+  try {
+    let { error } = await supabase.auth.signOut();
+    if (error) throw error;
+  } catch (error: any) {
+    toast.message = error.message;
+    await toast.present();
+  } finally {
+    await loader.dismiss();
+    router.push({ name: "Login", replace: true });
+  }
+}
 
-    onIonViewWillEnter(async () => {
-      session.value = (await supabase.auth.getSession()).data?.session;
-      if (session.value) {
-        await getProfile();
-      }
-    });
-    return { signOut, profile, session, updateProfile };
-  },
+onIonViewWillEnter(async () => {
+  session.value = (await supabase.auth.getSession()).data?.session;
+  if (session.value) {
+    await getProfile();
+  }
 });
 </script>

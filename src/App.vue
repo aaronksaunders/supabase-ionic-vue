@@ -4,34 +4,20 @@
   </ion-app>
 </template>
 
-<script lang="ts">
-import { IonApp, IonRouterOutlet, useIonRouter } from '@ionic/vue';
-import { defineComponent, nextTick } from 'vue';
+<script lang="ts" setup>
+import { IonApp, IonRouterOutlet, useIonRouter } from "@ionic/vue";
 
-import { store } from './store';
-import { supabase } from './supabase';
+import { store } from "./store";
+import { supabase } from "./supabase";
 
-export default defineComponent({
-  name: 'App',
-  components: {
-    IonApp,
-    IonRouterOutlet
-  },
-  setup(){
-    const router = useIonRouter();
-    // supabase.auth.getUser().then(({data, error})=>{
-    //   store.user = data?.user || {}
-    // }, error => console.log(error));
+const router = useIonRouter();
 
-    supabase.auth.onAuthStateChange(async (_, session) => {
-      
-      store.user = session?.user ?? {}
-      if(session) {
-        router.push('/account');
-      } else {
-        router.replace('/login');
-      }
-    })
+supabase.auth.onAuthStateChange(async (_, session) => {
+  store.user = session?.user ?? {};
+  if (session) {
+    router.push("/account");
+  } else {
+    router.replace("/login");
   }
 });
 </script>

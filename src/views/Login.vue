@@ -11,7 +11,7 @@
         <h1>Supabase + Ionic Vue</h1>
         <p>Sign in via magic link with your email below</p>
       </div>
-      <ion-list :inset=true>
+      <ion-list :inset="true">
         <form @submit.prevent="handleLogin">
           <ion-item>
             <ion-input
@@ -29,12 +29,11 @@
         </form>
       </ion-list>
     </ion-content>
-
   </ion-page>
 </template>
 
-<script lang="ts">
-import { supabase } from '../supabase';
+<script lang="ts" setup>
+import { supabase } from "../supabase";
 import {
   IonContent,
   IonHeader,
@@ -43,56 +42,31 @@ import {
   IonToolbar,
   IonList,
   IonItem,
-  IonLabel,
   IonInput,
   IonButton,
   toastController,
   loadingController,
-} from '@ionic/vue';
-import { defineComponent, ref } from 'vue';
+} from "@ionic/vue";
+import {  ref } from "vue";
 
-export default defineComponent({
-  name: 'LoginPage',
-  components: {
-    IonContent,
-    IonHeader,
-    IonPage,
-    IonTitle,
-    IonToolbar,
-    IonList,
-    IonItem,
-    IonLabel,
-    IonInput,
-    IonButton,
-  },
-  setup() {
-    const email = ref('');
-    const handleLogin = async () => {
+const email = ref("");
+const handleLogin = async () => {
+  const loader = await loadingController.create({});
+  const toast = await toastController.create({ duration: 5000 });
 
-      const loader = await loadingController.create({});
-      const toast = await toastController.create({ duration: 5000 });
+  try {
+    await loader.present();
+    const { error } = await supabase.auth.signInWithOtp({ email: email.value });
 
-      try {
-        await loader.present();
-        const { error } = await supabase.auth.signInWithOtp({ email: email.value });
+    if (error) throw error;
 
-        if (error) throw error;
-
-        toast.message = 'Check your email for the login link!';
-        await toast.present();
-
-      } catch (error: any) {
-
-        toast.message = error.error_description || error.message;
-        await toast.present();
-
-      } finally {
-
-        await loader.dismiss();
-
-      }
-    };
-    return { handleLogin, email };
-  },
-});
+    toast.message = "Check your email for the login link!";
+    await toast.present();
+  } catch (error: any) {
+    toast.message = error.error_description || error.message;
+    await toast.present();
+  } finally {
+    await loader.dismiss();
+  }
+};
 </script>

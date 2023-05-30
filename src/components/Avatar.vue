@@ -2,75 +2,74 @@
   <div class="avatar">
     <div class="avatar_wrapper" @click="uploadAvatar">
       <img v-if="avatarUrl" :src="avatarUrl" />
-      <!-- <ion-icon v-else name="person" class="no-avatar"></ion-icon> -->
+      <ion-icon v-else name="person" class="no-avatar"></ion-icon>
     </div>
   </div>
 </template>
 
-<script lang="ts">
-import { ref, toRefs, watch, defineComponent } from 'vue';
-import { supabase } from '../supabase';
-import { Camera, CameraResultType } from '@capacitor/camera';
-import { IonIcon } from '@ionic/vue';
-import { person } from 'ionicons/icons';
-export default defineComponent({
-  name: 'AppAvatar',
-  props: { path: String },
-  emits: ['upload', 'update:path'],
-  components: { IonIcon },
-  setup(prop, { emit }) {
-    const { path } = toRefs(prop);
-    const avatarUrl = ref('');
+<script lang="ts" setup>
+import { ref, toRefs, watch, defineComponent } from "vue";
+import { supabase } from "../supabase";
+import { Camera, CameraResultType } from "@capacitor/camera";
+import { IonIcon } from "@ionic/vue";
+import { person } from "ionicons/icons";
+// props: { path: String },
+// emits: ['upload', 'update:path'],
 
-    const downloadImage = async () => {
-      try {
-        const { data, error } = await supabase.storage
-          .from('avatars')
-          .download(path.value!);
-        if (error) throw error;
-        avatarUrl.value = URL.createObjectURL(data!);
-      } catch (error: any) {
-        console.error('Error downloading image: ', error.message);
-      }
-    };
+const props = defineProps<{ path: string }>();
+const emits = defineEmits<{
+  (event: "upload"): void;
+  (event: "update:path", fileName: string): void;
+}>();
 
-    const uploadAvatar = async () => {
-      try {
-        const photo = await Camera.getPhoto({
-          resultType: CameraResultType.DataUrl,
-        });
+const { path } = toRefs(props);
+const avatarUrl = ref("");
 
-        if (photo.dataUrl) {
-          const file = await fetch(photo.dataUrl)
-            .then((res) => res.blob())
-            .then(
-              (blob) =>
-                new File([blob], 'my-file', { type: `image/${photo.format}` })
-            );
+const downloadImage = async () => {
+  try {
+    const { data, error } = await supabase.storage
+      .from("avatars")
+      .download(path.value!);
+    if (error) throw error;
+    avatarUrl.value = URL.createObjectURL(data!);
+  } catch (error: any) {
+    console.error("Error downloading image: ", error.message);
+  }
+};
 
-          const fileName = `${Math.random()}-${new Date().getTime()}.${
-            photo.format
-          }`;
-          let { error: uploadError } = await supabase.storage
-            .from('avatars')
-            .upload(fileName, file);
-          if (uploadError) {
-            throw uploadError;
-          }
-          emit('update:path', fileName);
-          emit('upload');
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
-    watch(path, () => {
-      if (path.value) downloadImage();
+const uploadAvatar = async () => {
+  try {
+    const photo = await Camera.getPhoto({
+      resultType: CameraResultType.DataUrl,
     });
 
-    return { avatarUrl, uploadAvatar, person };
-  },
+    if (photo.dataUrl) {
+      const file = await fetch(photo.dataUrl)
+        .then((res) => res.blob())
+        .then(
+          (blob) =>
+            new File([blob], "my-file", { type: `image/${photo.format}` })
+        );
+
+      const fileName = `${Math.random()}-${new Date().getTime()}.${
+        photo.format
+      }`;
+      let { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file);
+      if (uploadError) {
+        throw uploadError;
+      }
+      emits("update:path", fileName);
+      emits("upload");
+    }
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+watch(path, () => {
+  if (path.value) downloadImage();
 });
 </script>
 <style>

@@ -2,7 +2,7 @@
   <div class="avatar">
     <div class="avatar_wrapper" @click="uploadAvatar">
       <img v-if="avatarUrl" :src="avatarUrl" />
-      <ion-icon v-else name="person" class="no-avatar"></ion-icon>
+      <!-- <ion-icon v-else name="person" class="no-avatar"></ion-icon> -->
     </div>
   </div>
 </template>

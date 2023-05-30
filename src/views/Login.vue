@@ -11,14 +11,15 @@
         <h1>Supabase + Ionic Vue</h1>
         <p>Sign in via magic link with your email below</p>
       </div>
-      <ion-list inset="true">
+      <ion-list :inset=true>
         <form @submit.prevent="handleLogin">
           <ion-item>
-            <ion-label position="stacked">Email</ion-label>
             <ion-input
               v-model="email"
               name="email"
-              autocomplete
+              label="Email"
+              label-placement="stacked"
+              autocomplete="email"
               type="email"
             ></ion-input>
           </ion-item>
@@ -27,7 +28,6 @@
           </div>
         </form>
       </ion-list>
-      <p>{{email}}</p>
     </ion-content>
 
   </ion-page>
@@ -74,7 +74,7 @@ export default defineComponent({
 
       try {
         await loader.present();
-        const { error } = await supabase.auth.signIn({ email: email.value });
+        const { error } = await supabase.auth.signInWithOtp({ email: email.value });
 
         if (error) throw error;
 

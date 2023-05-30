@@ -7,7 +7,10 @@
     </ion-header>
 
     <ion-content>
-      <avatar v-model:path="profile.avatar_url" @upload="updateProfile"></avatar>
+      <avatar
+        v-model:path="profile.avatar_url"
+        @upload="updateProfile"
+      ></avatar>
       <form @submit.prevent="updateProfile">
         <ion-item>
           <ion-label>
@@ -17,18 +20,20 @@
         </ion-item>
 
         <ion-item>
-          <ion-label position="stacked">Name</ion-label>
           <ion-input
             type="text"
+            label="Name"
+            label-placement="stacked"
             name="username"
             v-model="profile.username"
           ></ion-input>
         </ion-item>
 
         <ion-item>
-          <ion-label position="stacked">Website</ion-label>
           <ion-input
             type="url"
+            label="Website"
+            label-placement="stacked"
             name="website"
             v-model="profile.website"
           ></ion-input>
@@ -46,8 +51,8 @@
 </template>
 
 <script lang="ts">
-import { store } from '@/store';
-import { supabase } from '@/supabase';
+import { store } from "../store";
+import { supabase } from "../supabase";
 import {
   IonContent,
   IonHeader,
@@ -60,12 +65,16 @@ import {
   IonItem,
   IonButton,
   IonLabel,
-} from '@ionic/vue';
-import { User } from '@supabase/supabase-js';
-import { defineComponent, onMounted, ref } from 'vue';
-import Avatar from '../components/Avatar.vue';
+  onIonViewDidEnter,
+  onIonViewWillEnter,
+useIonRouter,
+} from "@ionic/vue";
+import { User } from "@supabase/supabase-js";
+import { defineComponent, nextTick, onMounted, ref } from "vue";
+import Avatar from "../components/Avatar.vue";
+import { useRouter } from "vue-router";
 export default defineComponent({
-  name: 'AccountPage',
+  name: "AccountPage",
   components: {
     Avatar,
     IonContent,
@@ -79,11 +88,12 @@ export default defineComponent({
     IonLabel,
   },
   setup() {
-    const session = ref(supabase.auth.session());
+    const session = ref();
+    const router = useIonRouter();
     const profile = ref({
-      username: '',
-      website: '',
-      avatar_url: '',
+      username: "",
+      website: "",
+      avatar_url: "",
     });
     const user = store.user as User;
     async function getProfile() {
@@ -92,15 +102,15 @@ export default defineComponent({
       await loader.present();
       try {
         let { data, error, status } = await supabase
-          .from('profiles')
+          .from("profiles")
           .select(`username, website, avatar_url`)
-          .eq('id', user.id)
+          .eq("id", user.id)
           .single();
 
         if (error && status !== 406) throw error;
 
         if (data) {
-          console.log(data)
+          console.log(data);
           profile.value = {
             username: data.username,
             website: data.website,
@@ -126,9 +136,7 @@ export default defineComponent({
           updated_at: new Date(),
         };
         //
-        let { error } = await supabase.from('profiles').upsert(updates, {
-          returning: 'minimal', // Don't return the value after inserting
-        });
+        let { error } = await supabase.from("profiles").upsert(updates);
         //
         if (error) throw error;
       } catch (error: any) {
@@ -151,11 +159,15 @@ export default defineComponent({
         await toast.present();
       } finally {
         await loader.dismiss();
+        router.push({name:"Login", replace : true});
       }
     }
 
-    onMounted(() => {
-      getProfile();
+    onIonViewWillEnter(async () => {
+      session.value = (await supabase.auth.getSession()).data?.session;
+      if (session.value) {
+        await getProfile();
+      }
     });
     return { signOut, profile, session, updateProfile };
   },

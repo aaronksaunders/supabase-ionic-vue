@@ -9,6 +9,9 @@ export default defineConfig({
     vue(),
     legacy()
   ],
+  optimizeDeps: {
+    exclude: [`@ionic/pwa-elements/loader`],
+  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
